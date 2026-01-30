@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-body: 'Inter', 'Roboto', sans-serif;
+  --font-heading: 'Poppins', 'Montserrat', sans-serif;
+  --font-accent: 'Playfair Display', serif;
+}
+
+@layer base {
+  body {
+    @apply bg-bhutan-cream dark:bg-bhutan-darkCharcoal text-bhutan-charcoal dark:text-bhutan-softWhite transition-colors duration-300;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl font-heading font-semibold text-white bg-gradient-to-r from-bhutan-saffron to-bhutan-royalRed hover:from-bhutan-gold hover:to-bhutan-red transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl font-heading font-medium text-bhutan-charcoal dark:text-bhutan-softWhite bg-white dark:bg-bhutan-slate border-2 border-bhutan-saffron hover:bg-bhutan-saffron hover:text-white transition-all duration-300;
+  }
+
+  .card {
+    @apply bg-white dark:bg-bhutan-slate rounded-2xl shadow-lg border border-bhutan-gold/20 dark:border-bhutan-saffron/30 p-6 transition-all duration-300;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border-2 border-bhutan-gold/30 dark:border-bhutan-saffron/30 bg-white dark:bg-bhutan-darkCharcoal text-bhutan-charcoal dark:text-bhutan-softWhite focus:outline-none focus:border-bhutan-saffron focus:ring-2 focus:ring-bhutan-saffron/20 transition-all duration-300;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-bhutan-saffron via-bhutan-royalRed to-bhutan-mountainBlue bg-clip-text text-transparent;
+  }
+
+  .bhutan-pattern {
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 153, 51, 0.03) 10px, rgba(255, 153, 51, 0.03) 20px),
+      repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(220, 20, 60, 0.03) 10px, rgba(220, 20, 60, 0.03) 20px);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bhutan-cream dark:bg-bhutan-darkCharcoal;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-bhutan-saffron rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-bhutan-royalRed;
+}
