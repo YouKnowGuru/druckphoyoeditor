@@ -29,7 +29,7 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
       const dpi = 300
       const paperWidth = selectedLayout.width * dpi
       const paperHeight = selectedLayout.height * dpi
-      
+
       canvas.width = paperWidth
       canvas.height = paperHeight
       const ctx = canvas.getContext('2d')
@@ -100,7 +100,7 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
     if (!canvas) return
 
     generatePrintLayout()
-    
+
     setTimeout(() => {
       const pdf = new jsPDF({
         orientation: selectedLayout.width > selectedLayout.height ? 'landscape' : 'portrait',
@@ -119,7 +119,7 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
     if (!canvas) return
 
     generatePrintLayout()
-    
+
     setTimeout(() => {
       const link = document.createElement('a')
       link.download = 'passport-photos.png'
@@ -145,15 +145,14 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
               setSelectedLayout(layout)
               setTimeout(generatePrintLayout, 100)
             }}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              selectedLayout.name === layout.name
+            className={`p-4 rounded-xl border-2 text-left transition-all ${selectedLayout.name === layout.name
                 ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
                 : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
-            }`}
+              }`}
           >
             <div className="font-heading font-semibold mb-1">{layout.name}</div>
             <div className="text-sm text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
-              {layout.width}" × {layout.height}"
+              {layout.width}&quot; × {layout.height}&quot;
             </div>
           </button>
         ))}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiLoader, FiCheck, FiAlertCircle } from 'react-icons/fi'
 
@@ -18,82 +18,7 @@ export default function BackgroundRemoval({ imageUrl, onImageUpdate }: Backgroun
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const workerRef = useRef<Worker | null>(null)
 
-  // Initialize Web Worker
-  useEffect(() => {
-    // Check if Web Workers are supported
-    if (typeof Worker !== 'undefined') {
-      try {
-        workerRef.current = new Worker('/background-worker.js')
-
-        workerRef.current.onmessage = (e) => {
-          const { type, imageUrl: resultUrl, progress: prog, message, error: err } = e.data
-
-          if (type === 'PROGRESS') {
-            setProgress(prog)
-            setProgressMessage(message)
-          } else if (type === 'SUCCESS') {
-            setProgress(100)
-            setProgressMessage('Complete!')
-            onImageUpdate(resultUrl)
-            setTimeout(() => {
-              setIsProcessing(false)
-              setProgress(0)
-              setProgressMessage('')
-            }, 500)
-          } else if (type === 'ERROR') {
-            setError(err)
-            setIsProcessing(false)
-            setProgress(0)
-            setProgressMessage('')
-            // Fallback to main thread processing
-            console.warn('Worker failed, using main thread fallback')
-            removeBackgroundFallback()
-          }
-        }
-
-        workerRef.current.onerror = (err) => {
-          console.error('Worker error:', err)
-          setError('Worker failed')
-          setIsProcessing(false)
-          // Fallback to main thread processing
-          removeBackgroundFallback()
-        }
-      } catch (err) {
-        console.warn('Failed to create worker, will use main thread fallback')
-      }
-    }
-
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate()
-      }
-    }
-  }, [])
-
-  const removeBackground = async () => {
-    setIsProcessing(true)
-    setProgress(0)
-    setProgressMessage('Starting...')
-    setError(null)
-
-    // Try to use Web Worker first
-    if (workerRef.current) {
-      try {
-        workerRef.current.postMessage({
-          type: 'REMOVE_BACKGROUND',
-          imageUrl: imageUrl
-        })
-        return
-      } catch (err) {
-        console.warn('Failed to post message to worker, using fallback')
-      }
-    }
-
-    // Fallback to main thread if worker not available
-    removeBackgroundFallback()
-  }
-
-  const removeBackgroundFallback = async () => {
+  const removeBackgroundFallback = useCallback(async () => {
     setIsProcessing(true)
     setProgress(10)
     setProgressMessage('Loading image...')
@@ -275,7 +200,30 @@ export default function BackgroundRemoval({ imageUrl, onImageUpdate }: Backgroun
       setIsProcessing(false)
       setError(error?.message || 'Unknown error occurred')
     }
-  }
+  }, [imageUrl, onImageUpdate])
+
+  const removeBackground = useCallback(async () => {
+    setIsProcessing(true)
+    setProgress(0)
+    setProgressMessage('Starting...')
+    setError(null)
+
+    // Try to use Web Worker first
+    if (workerRef.current) {
+      try {
+        workerRef.current.postMessage({
+          type: 'REMOVE_BACKGROUND',
+          imageUrl: imageUrl
+        })
+        return
+      } catch (err) {
+        console.warn('Failed to post message to worker, using fallback')
+      }
+    }
+
+    // Fallback to main thread if worker not available
+    removeBackgroundFallback()
+  }, [imageUrl, removeBackgroundFallback])
 
   const applyBackgroundColor = () => {
     const img = new Image()
@@ -309,6 +257,66 @@ export default function BackgroundRemoval({ imageUrl, onImageUpdate }: Backgroun
     { name: 'Red', value: '#DC143C' },
     { name: 'Gray', value: '#808080' },
   ]
+
+  const onImageUpdateRef = useRef(onImageUpdate)
+  const removeBackgroundFallbackRef = useRef(removeBackgroundFallback)
+
+  useEffect(() => {
+    onImageUpdateRef.current = onImageUpdate
+    removeBackgroundFallbackRef.current = removeBackgroundFallback
+  }, [onImageUpdate, removeBackgroundFallback])
+
+  // Initialize Web Worker
+  useEffect(() => {
+    // Check if Web Workers are supported
+    if (typeof Worker !== 'undefined') {
+      try {
+        workerRef.current = new Worker('/background-worker.js')
+
+        workerRef.current.onmessage = (e) => {
+          const { type, imageUrl: resultUrl, progress: prog, message, error: err } = e.data
+
+          if (type === 'PROGRESS') {
+            setProgress(prog)
+            setProgressMessage(message)
+          } else if (type === 'SUCCESS') {
+            setProgress(100)
+            setProgressMessage('Complete!')
+            onImageUpdateRef.current(resultUrl)
+            setTimeout(() => {
+              setIsProcessing(false)
+              setProgress(0)
+              setProgressMessage('')
+            }, 500)
+          } else if (type === 'ERROR') {
+            setError(err)
+            setIsProcessing(false)
+            setProgress(0)
+            setProgressMessage('')
+            // Fallback to main thread processing
+            console.warn('Worker failed, using main thread fallback')
+            removeBackgroundFallbackRef.current()
+          }
+        }
+
+        workerRef.current.onerror = (err) => {
+          console.error('Worker error:', err)
+          setError('Worker failed')
+          setIsProcessing(false)
+          // Fallback to main thread processing
+          removeBackgroundFallbackRef.current()
+        }
+      } catch (err) {
+        console.warn('Failed to create worker, will use main thread fallback')
+      }
+    }
+
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate()
+      }
+    }
+  }, [])
 
   return (
     <div className="space-y-6">

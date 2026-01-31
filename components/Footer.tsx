@@ -140,7 +140,7 @@ export default function Footer() {
               })}
             </div>
             <p className="text-sm text-bhutan-softWhite/60 italic">
-              "Tashi Delek! May all beings be happy and free from suffering."
+              &quot;Tashi Delek! May all beings be happy and free from suffering.&quot;
             </p>
           </motion.div>
         </div>
