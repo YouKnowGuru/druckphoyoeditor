@@ -16,7 +16,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'Photo Editor - Passport/ID Photo Processing',
+  title: 'our store - Passport/ID Photo Processing',
   description: 'Professional passport and ID photo editing with automatic enhancements',
 }
 

@@ -1,4 +1,4 @@
-# Photo Editor - Passport/ID Photo Processing
+# our store - Passport/ID Photo Processing
 
 A professional web-based photo editing application for passport/ID photo processing with a beautiful Bhutanese-inspired design. All processing happens client-side in the browser - no backend needed!
 

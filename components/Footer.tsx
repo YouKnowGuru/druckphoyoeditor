@@ -51,10 +51,10 @@ export default function Footer() {
             className="lg:col-span-1"
           >
             <h3 className="text-2xl font-heading font-bold mb-4 bg-gradient-to-r from-bhutan-saffron to-bhutan-gold bg-clip-text text-transparent">
-              Photo Editor
+              our store
             </h3>
             <p className="text-bhutan-softWhite/70 mb-4 leading-relaxed">
-              Professional passport photo editing with Bhutanese-inspired design. All processing happens securely in your browser.
+              Professional passport photo editing. All processing happens securely in your browser.
             </p>
             <div className="flex items-center gap-2 text-sm text-bhutan-softWhite/60">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -140,7 +140,7 @@ export default function Footer() {
               })}
             </div>
             <p className="text-sm text-bhutan-softWhite/60 italic">
-              &quot;Tashi Delek! May all beings be happy and free from suffering.&quot;
+              &quot;Quality photos for your specialized needs.&quot;
             </p>
           </motion.div>
         </div>
@@ -160,7 +160,7 @@ export default function Footer() {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-bhutan-softWhite/50">
           <div className="flex items-center gap-2">
-            <span>© {currentYear} Photo Editor.</span>
+            <span>© {currentYear} our store.</span>
             <span className="hidden md:inline">•</span>
             <span>All rights reserved.</span>
           </div>

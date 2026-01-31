@@ -12,7 +12,7 @@ export default function Hero() {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-5xl md:text-7xl font-accent font-bold mb-6 gradient-text">
-            Professional Photo Editor
+            our store
           </h1>
           <p className="text-xl md:text-2xl text-bhutan-charcoal/70 dark:text-bhutan-softWhite/70 mb-8 max-w-2xl mx-auto">
             Create perfect passport and ID photos with automatic enhancements.
@@ -25,7 +25,7 @@ export default function Hero() {
             className="flex justify-center"
           >
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-bhutan-saffron to-bhutan-royalRed flex items-center justify-center animate-pulse-glow">
-              <span className="text-3xl">🐉</span>
+              <span className="text-3xl">📸</span>
             </div>
           </motion.div>
         </motion.div>

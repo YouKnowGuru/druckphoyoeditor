@@ -18,10 +18,10 @@ export default function Header() {
             </div>
             <div>
               <h1 className="text-xl font-heading font-bold gradient-text">
-                Photo Editor
+                our store
               </h1>
               <p className="text-xs text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
-                Tashi Delek! Welcome
+                Welcome to our store
               </p>
             </div>
           </div>

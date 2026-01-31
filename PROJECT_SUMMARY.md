@@ -1,4 +1,4 @@
-# Photo Editor - Project Summary
+# our store - Project Summary
 
 ## 🎯 Project Overview
 
