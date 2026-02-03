@@ -9,16 +9,23 @@ interface PrintLayoutProps {
 }
 
 const LAYOUTS = [
-  { name: 'A4 - Half Photo (3.5x5") - No Space', width: 8.27, height: 11.69, photoWidth: 3.5, photoHeight: 5, copies: 4, cols: 2, rows: 2 },
-  { name: '4x6" - Half Photo (3.5x5") - No Space', width: 4, height: 6, photoWidth: 3.5, photoHeight: 5, copies: 1, cols: 1, rows: 1 },
-  { name: 'A4 - 35x45mm (No Space)', width: 8.27, height: 11.69, photoWidth: 1.38, photoHeight: 1.77, copies: 12, cols: 3, rows: 4 },
-  { name: '4x6" - 35x45mm (No Space)', width: 4, height: 6, photoWidth: 1.38, photoHeight: 1.77, copies: 8, cols: 4, rows: 2 },
-  { name: 'Letter - 35x45mm (No Space)', width: 8.5, height: 11, photoWidth: 1.38, photoHeight: 1.77, copies: 10, cols: 2, rows: 5 },
+  { name: 'A4 Paper', width: 8.27, height: 11.69 },
+  { name: '4x6" Photo Paper', width: 4, height: 6 },
+  { name: 'Letter Paper', width: 8.5, height: 11 },
+]
+
+const PHOTO_SIZES = [
+  { name: 'Passport (35x45mm)', width: 1.38, height: 1.77 },
+  { name: 'Half Photo (3.5x5")', width: 3.5, height: 5 },
+  { name: 'Square (2x2")', width: 2, height: 2 },
 ]
 
 export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
   const [selectedLayout, setSelectedLayout] = useState(LAYOUTS[0])
+  const [selectedPhotoSize, setSelectedPhotoSize] = useState(PHOTO_SIZES[0])
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait')
   const [showCutLines, setShowCutLines] = useState(true)
+  const [copies, setCopies] = useState(8)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const generatePrintLayout = () => {
@@ -29,8 +36,12 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
     img.crossOrigin = 'anonymous'
     img.onload = () => {
       const dpi = 300
-      const paperWidth = selectedLayout.width * dpi
-      const paperHeight = selectedLayout.height * dpi
+
+      const pWidth = orientation === 'portrait' ? selectedLayout.width : selectedLayout.height
+      const pHeight = orientation === 'portrait' ? selectedLayout.height : selectedLayout.width
+
+      const paperWidth = pWidth * dpi
+      const paperHeight = pHeight * dpi
 
       canvas.width = paperWidth
       canvas.height = paperHeight
@@ -41,29 +52,58 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
       ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      // Calculate photo size from layout or default to passport
-      const photoWidthInches = (selectedLayout as any).photoWidth || 1.38
-      const photoHeightInches = (selectedLayout as any).photoHeight || 1.77
+      const photoWidthInches = selectedPhotoSize.width
+      const photoHeightInches = selectedPhotoSize.height
       const photoWidth = photoWidthInches * dpi
       const photoHeight = photoHeightInches * dpi
 
-      // Zero margin and zero spacing as requested
-      const margin = 0
+      // Calculate how many fit
       const spacing = 0
-      const cols = selectedLayout.cols
-      const rows = selectedLayout.rows
+      const margin = 0.1 * dpi
+
+      const cols = Math.floor((paperWidth - margin * 2) / photoWidth)
+      const rows = Math.floor((paperHeight - margin * 2) / photoHeight)
+
       const cellWidth = photoWidth
       const cellHeight = photoHeight
 
+
+      // Use minimal margin at the top-left to avoid wasting paper as requested
+      const marginX = 0.1 * dpi
+      const marginY = 0.1 * dpi
+
       // Draw photos
       let copyIndex = 0
-      for (let row = 0; row < rows && copyIndex < selectedLayout.copies; row++) {
-        for (let col = 0; col < cols && copyIndex < selectedLayout.copies; col++) {
-          const x = margin + col * (cellWidth + spacing)
-          const y = margin + row * (cellHeight + spacing)
+      for (let row = 0; row < rows && copyIndex < copies; row++) {
+        for (let col = 0; col < cols && copyIndex < copies; col++) {
+          const x = marginX + col * (cellWidth + spacing)
+          const y = marginY + row * (cellHeight + spacing)
 
-          // Draw photo
-          ctx.drawImage(img, x, y, photoWidth, photoHeight)
+          // Draw photo with aspect ratio preservation (object-fit: cover equivalent)
+          const imageAspect = img.width / img.height
+          const slotAspect = photoWidth / photoHeight
+
+          let drawWidth = photoWidth
+          let drawHeight = photoHeight
+          let offsetX = 0
+          let offsetY = 0
+
+          if (imageAspect > slotAspect) {
+            // Image is wider than slot - crop sides
+            drawWidth = img.height * slotAspect
+            drawHeight = img.height
+            offsetX = (img.width - drawWidth) / 2
+          } else {
+            // Image is taller than slot - crop top/bottom
+            // To avoid cutting off heads, we'll keep the top fixed and crop from the bottom if it's too tall, 
+            // but standard 'cover' centers it. The user said head is cut, so let's shift it.
+            drawWidth = img.width
+            drawHeight = img.width / slotAspect
+            // Instead of (img.height - drawHeight) / 2, we can prioritize the top
+            offsetY = Math.max(0, (img.height - drawHeight) * 0.2) // Shift slightly down to keep head
+          }
+
+          ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight, x, y, photoWidth, photoHeight)
 
           // Draw cut lines if enabled
           if (showCutLines) {
@@ -91,7 +131,7 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
       generatePrintLayout()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLayout, showCutLines, imageUrl])
+  }, [selectedLayout, selectedPhotoSize, orientation, showCutLines, imageUrl, copies])
 
   const exportAsPDF = () => {
     const canvas = canvasRef.current
@@ -100,15 +140,18 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
     generatePrintLayout()
 
     setTimeout(() => {
+      const pWidth = orientation === 'portrait' ? selectedLayout.width : selectedLayout.height
+      const pHeight = orientation === 'portrait' ? selectedLayout.height : selectedLayout.width
+
       const pdf = new jsPDF({
-        orientation: selectedLayout.width > selectedLayout.height ? 'landscape' : 'portrait',
+        orientation: pWidth > pHeight ? 'landscape' : 'portrait',
         unit: 'in',
-        format: [selectedLayout.width, selectedLayout.height]
+        format: [pWidth, pHeight]
       })
 
       const imgData = canvas.toDataURL('image/png')
-      pdf.addImage(imgData, 'PNG', 0, 0, selectedLayout.width, selectedLayout.height)
-      pdf.save('passport-photos.pdf')
+      pdf.addImage(imgData, 'PNG', 0, 0, pWidth, pHeight)
+      pdf.save('print-layout.pdf')
     }, 500)
   }
 
@@ -199,25 +242,78 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {LAYOUTS.map((layout) => (
-            <button
-              key={layout.name}
-              onClick={() => {
-                setSelectedLayout(layout)
-                setTimeout(generatePrintLayout, 100)
-              }}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${selectedLayout.name === layout.name
-                ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
-                : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
-                }`}
-            >
-              <div className="font-heading font-semibold mb-1">{layout.name}</div>
-              <div className="text-sm text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
-                {layout.width}&quot; × {layout.height}&quot;
-              </div>
-            </button>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="space-y-4">
+            <h4 className="font-heading font-semibold text-sm uppercase tracking-wider text-bhutan-charcoal/40 dark:text-bhutan-softWhite/40">Paper Size</h4>
+            <div className="flex flex-col gap-2">
+              {LAYOUTS.map((layout) => (
+                <button
+                  key={layout.name}
+                  onClick={() => {
+                    setSelectedLayout(layout)
+                    setTimeout(generatePrintLayout, 100)
+                  }}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${selectedLayout.name === layout.name
+                    ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
+                    : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
+                    }`}
+                >
+                  <div className="font-heading font-semibold text-sm">{layout.name}</div>
+                  <div className="text-xs text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
+                    {layout.width}&quot; × {layout.height}&quot;
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-heading font-semibold text-sm uppercase tracking-wider text-bhutan-charcoal/40 dark:text-bhutan-softWhite/40">Photo Size</h4>
+            <div className="flex flex-col gap-2">
+              {PHOTO_SIZES.map((size) => (
+                <button
+                  key={size.name}
+                  onClick={() => {
+                    setSelectedPhotoSize(size)
+                    setTimeout(generatePrintLayout, 100)
+                  }}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${selectedPhotoSize.name === size.name
+                    ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
+                    : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
+                    }`}
+                >
+                  <div className="font-heading font-semibold text-sm">{size.name}</div>
+                  <div className="text-xs text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
+                    {size.width}&quot; × {size.height}&quot;
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-heading font-semibold text-sm uppercase tracking-wider text-bhutan-charcoal/40 dark:text-bhutan-softWhite/40">Orientation</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setOrientation('portrait')}
+                className={`p-3 rounded-xl border-2 text-center transition-all ${orientation === 'portrait'
+                  ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
+                  : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
+                  }`}
+              >
+                Portrait
+              </button>
+              <button
+                onClick={() => setOrientation('landscape')}
+                className={`p-3 rounded-xl border-2 text-center transition-all ${orientation === 'landscape'
+                  ? 'border-bhutan-saffron bg-bhutan-gold/10 dark:bg-bhutan-saffron/20'
+                  : 'border-bhutan-gold/30 dark:border-bhutan-saffron/30 hover:border-bhutan-saffron'
+                  }`}
+              >
+                Landscape
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="card">
@@ -233,6 +329,39 @@ export default function PrintLayout({ imageUrl }: PrintLayoutProps) {
             />
             <span className="font-medium">Show cut lines</span>
           </label>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h4 className="font-heading font-semibold">Number of Copies</h4>
+              <p className="text-sm text-bhutan-charcoal/60 dark:text-bhutan-softWhite/60">
+                Adjust the total number of photos to print on this page.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setCopies(Math.max(1, copies - 1))}
+                className="w-10 h-10 rounded-lg bg-bhutan-gold/10 dark:bg-bhutan-saffron/20 flex items-center justify-center hover:bg-bhutan-gold/20 transition-colors"
+                disabled={copies <= 1}
+              >
+                -
+              </button>
+              <input
+                type="number"
+                value={copies}
+                onChange={(e) => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-16 text-center bg-transparent border-2 border-bhutan-gold/30 dark:border-bhutan-saffron/30 rounded-lg py-1 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                min="1"
+              />
+              <button
+                onClick={() => setCopies(copies + 1)}
+                className="w-10 h-10 rounded-lg bg-bhutan-gold/10 dark:bg-bhutan-saffron/20 flex items-center justify-center hover:bg-bhutan-gold/20 transition-colors"
+              >
+                +
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="card">
