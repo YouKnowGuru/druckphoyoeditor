@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { FiSun, FiMoon, FiMenu, FiX } from 'react-icons/fi'
 import { useTheme } from './ThemeProvider'
 
@@ -13,8 +14,14 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-bhutan-saffron to-bhutan-royalRed flex items-center justify-center">
-              <span className="text-white font-bold text-xl">📸</span>
+            <div className="relative w-10 h-10 overflow-hidden rounded-lg">
+              <Image
+                src="/logo.png"
+                alt="our store logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div>
               <h1 className="text-xl font-heading font-bold gradient-text">

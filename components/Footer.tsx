@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { FiGithub, FiTwitter, FiLinkedin, FiMail, FiHeart } from 'react-icons/fi'
 
 export default function Footer() {
@@ -50,9 +51,19 @@ export default function Footer() {
             transition={{ duration: 0.5 }}
             className="lg:col-span-1"
           >
-            <h3 className="text-2xl font-heading font-bold mb-4 bg-gradient-to-r from-bhutan-saffron to-bhutan-gold bg-clip-text text-transparent">
-              our store
-            </h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative w-12 h-12 overflow-hidden rounded-lg bg-white/10 backdrop-blur-sm p-1">
+                <Image
+                  src="/logo.png"
+                  alt="our store logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <h3 className="text-2xl font-heading font-bold bg-gradient-to-r from-bhutan-saffron to-bhutan-gold bg-clip-text text-transparent">
+                our store
+              </h3>
+            </div>
             <p className="text-bhutan-softWhite/70 mb-4 leading-relaxed">
               Professional passport photo editing. All processing happens securely in your browser.
             </p>
